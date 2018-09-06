@@ -29,9 +29,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
         if (action == MotionEvent.ACTION_UP) {
             bezier.handleActionUp();
-
             return super.onTouchEvent(event);
-
         } else {
             return gestureDetector.onTouchEvent(event);
         }
@@ -39,7 +37,7 @@ public class MainActivity extends AppCompatActivity implements GestureDetector.O
 
     @Override
     public boolean onDown(MotionEvent e) {
-        bezier.initCenter(e);
+        bezier.handleDown(e);
 
         return false;
     }

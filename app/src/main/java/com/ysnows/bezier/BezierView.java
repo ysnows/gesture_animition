@@ -4,21 +4,15 @@ import android.animation.ValueAnimator;
 import android.content.Context;
 import android.graphics.Canvas;
 import android.graphics.Color;
-import android.graphics.LinearGradient;
-import android.graphics.Matrix;
 import android.graphics.Paint;
 import android.graphics.Path;
 import android.graphics.PointF;
-import android.graphics.Shader;
 import android.util.AttributeSet;
-import android.util.Log;
-import android.view.GestureDetector;
+import android.util.DisplayMetrics;
 import android.view.MotionEvent;
 import android.view.View;
+import android.view.WindowManager;
 import android.view.animation.AccelerateDecelerateInterpolator;
-
-import java.util.ArrayList;
-import java.util.List;
 
 
 /**
@@ -45,6 +39,7 @@ public class BezierView extends View {
     private PointF PThree;
     private int screenWidthPixels;
     private float v;
+    private ValueAnimator valueAnimator;
 
     public BezierView(Context context) {
         this(context, null);
@@ -72,6 +67,8 @@ public class BezierView extends View {
         paint.setStyle(Paint.Style.FILL);
         paint.setStrokeWidth(10);
         slice = screenWidthPixels / 10;
+        setBackgroundColor(Color.TRANSPARENT);
+        setVisibility(GONE);
 
         center = new PointF(0, 0);
 
@@ -205,7 +202,7 @@ public class BezierView extends View {
                 }
             }
         }
-        invalidate();
+        postInvalidate();
     }
 
 
@@ -214,11 +211,16 @@ public class BezierView extends View {
      *
      * @param e
      */
-    public void initCenter(MotionEvent e) {
+    public void handleDown(MotionEvent e) {
+        setVisibility(VISIBLE);
+        if (valueAnimator != null && valueAnimator.isRunning()) {
+            valueAnimator.cancel();
+        }
+
         if (position.equals("top") || position.equals("bottom")) {
-            center.x = e.getX();
+            center.x = e.getRawX();
         } else if (position.equals("left") || position.equals("right")) {
-            center.y = e.getY();
+            center.y = e.getRawY();
         }
     }
 
@@ -228,7 +230,7 @@ public class BezierView extends View {
     public void handleActionUp() {
         final float nowHeight = center.y;
         final float nowWidth = center.x;
-        ValueAnimator valueAnimator = ValueAnimator.ofFloat(1F, 0F);
+        valueAnimator = ValueAnimator.ofFloat(1F, 0F);
         valueAnimator.setDuration(300);
         valueAnimator.setInterpolator(new AccelerateDecelerateInterpolator());
         valueAnimator.addUpdateListener(new ValueAnimator.AnimatorUpdateListener() {
@@ -242,10 +244,22 @@ public class BezierView extends View {
                     center.x = (int) (nowWidth * value);
                 }
                 postInvalidate();
-                v = 0;
+
+                if (value == 0) {
+                    setVisibility(GONE);
+                    v = 0;
+                }
             }
         });
         valueAnimator.start();
 
+    }
+
+
+    public int getScreenWidthPixels() {
+        DisplayMetrics dm = new DisplayMetrics();
+        ((WindowManager) BaseApp.getInstance().getSystemService(BaseApp.getInstance().WINDOW_SERVICE)).getDefaultDisplay()
+                .getMetrics(dm);
+        return dm.widthPixels;
     }
 }
